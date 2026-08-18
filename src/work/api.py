@@ -1,3 +1,4 @@
+import os
 from dataclasses import asdict
 
 from fastapi import FastAPI
@@ -10,10 +11,11 @@ from work.infrastructure.adapters import (
     Demo1688Provider,
     MemoryMappingStore,
 )
+from work.infrastructure.tencent_docs import build_tencent_docs_store_from_env
 from work.settings import settings
 
-app = FastAPI(title="拼多多宠物玩具代发运营框架", version="0.1.0")
-store = MemoryMappingStore()
+app = FastAPI(title="拼多多宠物玩具代发运营框架", version="0.2.0")
+memory_store = MemoryMappingStore()
 
 
 class EvaluationRequest(BaseModel):
@@ -26,6 +28,11 @@ class EvaluationRequest(BaseModel):
     demand_score: float = Field(default=0.5, ge=0, le=1)
     competition_score: float = Field(default=0.5, ge=0, le=1)
     supply_score: float = Field(default=0.5, ge=0, le=1)
+
+
+def mapping_store():
+    enabled = os.getenv("TENCENT_DOCS_ENABLED", "false").lower() == "true"
+    return build_tencent_docs_store_from_env() if enabled else memory_store
 
 
 @app.get("/health")
@@ -46,7 +53,7 @@ def evaluate(request: EvaluationRequest) -> dict:
 @app.post("/v1/monitor/sync")
 def monitor_sync() -> dict:
     service = MonitoringService(
-        store,
+        mapping_store(),
         Demo1688Provider(),
         ConsoleNotifier(),
         low_stock_threshold=settings.low_stock_threshold,
