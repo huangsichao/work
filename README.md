@@ -31,3 +31,7 @@
 - POST /v1/monitor/sync：执行一次商品监控（使用演示适配器）。
 
 详细架构和腾讯文档字段见 docs 目录。
+
+## 腾讯文档读写
+
+已加入可配置的腾讯文档读写适配器：work.infrastructure.tencent_docs。配置授权的 API/ERP 网关后，运行 build_tencent_docs_store_from_env() 即可获得商品映射存储；该实现支持分页读取、429/5xx 重试、字段校验和按商品+SKU 幂等写回。具体环境变量和 HTTP 契约见 docs/tencent-docs-schema.md。
