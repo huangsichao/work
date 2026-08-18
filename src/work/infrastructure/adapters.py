@@ -1,4 +1,13 @@
 from work.domain.models import Alert, ProductMapping, ProductSnapshot, ProductStatus
+from work.infrastructure.tencent_docs import TencentDocsMappingStore
+
+__all__ = [
+    "ConsoleNotifier",
+    "Demo1688Provider",
+    "MemoryMappingStore",
+    "PddMarketplaceAdapter",
+    "TencentDocsMappingStore",
+]
 
 
 class MemoryMappingStore:
@@ -35,19 +44,6 @@ class Demo1688Provider:
 class ConsoleNotifier:
     def notify(self, alert: Alert) -> None:
         print(f"[{alert.level}] {alert.code} {alert.listing_id or ''} {alert.message}")
-
-
-class TencentDocsMappingStore:
-    """腾讯文档适配器边界，待获得官方 API 授权后实现。"""
-
-    def __init__(self, base_url: str):
-        self.base_url = base_url
-
-    def list_active(self) -> list[ProductMapping]:
-        raise NotImplementedError("请配置腾讯文档官方 API 或授权 ERP")
-
-    def save(self, mapping: ProductMapping) -> None:
-        raise NotImplementedError("请配置腾讯文档官方 API 或授权 ERP")
 
 
 class PddMarketplaceAdapter:
