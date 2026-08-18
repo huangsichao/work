@@ -1,10 +1,17 @@
 import json
+import os
 import unittest
+from unittest.mock import patch
 
 import httpx
 
 from work.domain.models import Alert, AlertLevel
-from work.infrastructure.qq_alerts import QQBotConfig, QQBotNotifier, format_alert
+from work.infrastructure.qq_alerts import (
+    QQAlertError,
+    QQBotConfig,
+    QQBotNotifier,
+    format_alert,
+)
 
 
 class QQBotNotifierTests(unittest.TestCase):
@@ -55,13 +62,22 @@ class QQBotNotifierTests(unittest.TestCase):
         self.assertEqual(channel.message_path, "/channels/channel-1/messages")
 
     def test_invalid_target_type_is_rejected(self):
-        with self.assertRaises(ValueError):
-            QQBotConfig.from_env()
+        env = {
+            "QQ_BOT_APP_ID": "app",
+            "QQ_BOT_CLIENT_SECRET": "secret",
+            "QQ_ALERT_TARGET_ID": "target",
+            "QQ_ALERT_TARGET_TYPE": "invalid",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(QQAlertError):
+                QQBotConfig.from_env()
 
 
 class QQAlertFormattingTests(unittest.TestCase):
     def test_format_includes_level_code_listing_and_message(self):
-        text = format_alert(Alert(AlertLevel.P0, "SOURCE_UNAVAILABLE", "货源下架", "pdd-1"))
+        text = format_alert(
+            Alert(AlertLevel.P0, "SOURCE_UNAVAILABLE", "货源下架", "pdd-1")
+        )
         self.assertIn("P0", text)
         self.assertIn("SOURCE_UNAVAILABLE", text)
         self.assertIn("pdd-1", text)
